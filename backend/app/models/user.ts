@@ -1,12 +1,21 @@
+// Import de valor, no de tipo: el decorador `hasMany` necesita la clase en
+// tiempo de ejecución. El ciclo con `#models/task` lo resuelve el closure
+// perezoso `() => Task`, que es el patrón habitual de Lucid.
+import Task from '#models/task'
 import { UserSchema } from '#database/schema'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
+import { hasMany } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { type AccessToken, DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 
 export default class User extends compose(UserSchema, withAuthFinder(hash)) {
   static accessTokens = DbAccessTokensProvider.forModel(User)
   declare currentAccessToken?: AccessToken
+
+  @hasMany(() => Task, { foreignKey: 'assigneeId' })
+  declare tasks: HasMany<typeof Task>
 
   get initials() {
     const [first, last] = this.fullName ? this.fullName.split(' ') : this.email.split('@')
