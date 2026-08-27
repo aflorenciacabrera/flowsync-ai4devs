@@ -25,7 +25,7 @@ La otra fuente de verdad candidata es `docs/prd/` y `docs/backlog/`: historias, 
 
 ## Estado
 
-Aceptada.
+Reemplazada por [0002-tests-como-fuente-de-verdad-ejecutable](0002-tests-como-fuente-de-verdad-ejecutable.md).
 
 ## Consecuencias
 
