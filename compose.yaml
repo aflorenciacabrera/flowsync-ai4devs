@@ -1,0 +1,49 @@
+# Bases de datos de FlowSync. Credenciales de desarrollo local, no son secretos.
+#
+# Puertos 54410 y 54411 a propósito, para no chocar con un Postgres instalado
+# en la máquina (5432). Escuchan solo en loopback.
+#
+# La primera vez, la imagen crea la base y durante ese rato no acepta
+# conexiones TCP. Por eso el healthcheck va contra 127.0.0.1 y no contra el
+# socket (el servidor temporal de inicialización solo escucha en el socket),
+# y por eso el arranque es `docker compose up -d --wait`.
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: flowsync
+      POSTGRES_PASSWORD: flowsync
+      POSTGRES_DB: flowsync
+    ports:
+      - '127.0.0.1:54410:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U flowsync -d flowsync']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  # Base de pruebas: en memoria (tmpfs) y sin volumen. Efímera a propósito:
+  # al parar el contenedor se pierde todo.
+  db-test:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: flowsync
+      POSTGRES_PASSWORD: flowsync
+      POSTGRES_DB: flowsync_test
+    ports:
+      - '127.0.0.1:54411:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U flowsync -d flowsync_test']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+volumes:
+  db-data:

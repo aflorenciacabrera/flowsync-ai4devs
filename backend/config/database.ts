@@ -1,15 +1,30 @@
 import app from '@adonisjs/core/services/app'
+import env from '#start/env'
 import { defineConfig } from '@adonisjs/lucid'
+import pg from 'pg'
+
+/**
+ * Las columnas `date` llegan como el texto `AAAA-MM-DD` que guarda Postgres, no
+ * como un `Date` (que es lo que hace `pg` por defecto, a medianoche del huso del
+ * servidor). Una fecha de vencimiento es un día del calendario, no un instante:
+ * `Task.isOverdueOn` la compara como texto y `database/schema_rules.ts` la
+ * declara `string`. Sin esto, el tipo declarado miente y la comparación da
+ * `false` siempre. 1082 es el OID de `date` en Postgres.
+ *
+ * Es global al proceso y afecta a todas las columnas `date` que se añadan.
+ */
+pg.types.setTypeParser(1082, (value: string) => value)
 
 const dbConfig = defineConfig({
   /**
    * Default connection used for all queries.
    */
-  connection: 'sqlite',
+  connection: 'pg',
 
   connections: {
     /**
-     * SQLite connection (default).
+     * SQLite connection. Ya no es la de por defecto; se conserva por si hace
+     * falta volver a ella.
      */
     sqlite: {
       client: 'better-sqlite3',
@@ -49,24 +64,36 @@ const dbConfig = defineConfig({
     },
 
     /**
-     * PostgreSQL connection.
-     * Install package to switch: npm install pg
+     * PostgreSQL connection (default). Las bases viven en Docker, ver
+     * compose.yaml: desarrollo en el 54410, pruebas en el 54411 (.env.test).
      */
-    // pg: {
-    //   client: 'pg',
-    //   connection: {
-    //     host: env.get('DB_HOST'),
-    //     port: env.get('DB_PORT'),
-    //     user: env.get('DB_USER'),
-    //     password: env.get('DB_PASSWORD'),
-    //     database: env.get('DB_DATABASE'),
-    //   },
-    //   migrations: {
-    //     naturalSort: true,
-    //     paths: ['database/migrations'],
-    //   },
-    //   debug: app.inDev,
-    // },
+    pg: {
+      client: 'pg',
+      connection: {
+        host: env.get('DB_HOST'),
+        port: env.get('DB_PORT'),
+        user: env.get('DB_USER'),
+        password: env.get('DB_PASSWORD').release(),
+        database: env.get('DB_DATABASE'),
+      },
+      migrations: {
+        naturalSort: true,
+        paths: ['database/migrations'],
+      },
+      debug: app.inDev,
+
+      schemaGeneration: {
+        /**
+         * Enable schema generation from Lucid models.
+         */
+        enabled: true,
+
+        /**
+         * Custom schema rules file paths.
+         */
+        rulesPaths: ['./database/schema_rules.js'],
+      },
+    },
 
     /**
      * MySQL / MariaDB connection.
@@ -78,7 +105,7 @@ const dbConfig = defineConfig({
     //     host: env.get('DB_HOST'),
     //     port: env.get('DB_PORT'),
     //     user: env.get('DB_USER'),
-    //     password: env.get('DB_PASSWORD'),
+    //     password: env.get('DB_PASSWORD').release(),
     //     database: env.get('DB_DATABASE'),
     //   },
     //   migrations: {
@@ -98,7 +125,7 @@ const dbConfig = defineConfig({
     //     server: env.get('DB_HOST'),
     //     port: env.get('DB_PORT'),
     //     user: env.get('DB_USER'),
-    //     password: env.get('DB_PASSWORD'),
+    //     password: env.get('DB_PASSWORD').release(),
     //     database: env.get('DB_DATABASE'),
     //   },
     //   migrations: {
