@@ -65,3 +65,26 @@ No toques nada fuera de backend/tests/unit/. Si un test falla, déjalo en rojo: 
 ```
 
 **Qué salió:** seis tests en `backend/tests/unit/task_overdue.spec.ts` a la primera; 4 en verde y 2 en rojo: «tarea hecha con la fecha pasada» (el método no mira el estado) y «texto vs Date» (el `<` con un `Date` da `false`). Se dejaron en rojo, como pedía el prompt.
+
+## Prompt 3
+
+**Modelo:** Fable 5.1 (claude-fable-5-1)
+**Herramienta:** Claude Code
+
+```
+# Hallazgos
+
+## 1. Casos nuevos en rojo y los que ya había en verde
+
+De los 13 casos nuevos fallaron 5: en `make test-e2e` la pantalla dio 44 passed, 3 failed (47), y esos 3 son del archivo nuevo, así que los 40 que ya había siguieron en verde; en `make test-unit` dio 4 passed, 2 failed (6), y no había ninguno unitario antes.
+
+## 2. Cuáles pasaron, y por qué
+
+Pasaron los 4 funcionales que esperan `isOverdue` en false y los 4 unitarios que comparan dos textos o un null. Los 3 funcionales que fallaron son los únicos que exigen `true` después de releer la tarea: `due_date` vuelve como `Date` y el `<` contra un texto da siempre false, así que «hecha con la fecha pasada» sale verde sin mirar el estado. En unitarios, con la fecha en texto, ese mismo caso falla porque el método devuelve true, y el del `Date` falla porque no vence.
+
+## 3. La duda
+
+«Darla por hecha» y «aplazar» murieron en el assert de que antes estaba vencida, así que no llegué a ver ni el cambio a `done` ni la respuesta del PUT; tampoco imprimí el tipo real de `dueDate` al salir de la base, lo deduje del driver y de que todo `true` llega `false`.
+```
+
+**Qué salió:** se contrastó contra las suites completas y los recuentos cuadran (44/3 de 47 y 4/2 de 6). La duda del punto 3 se cerró con una prueba desechable que imprimió el valor real: tras `findOrFail`, `dueDate` es un `Date`; el GET lo devuelve como `2026-08-12T00:00:00.000Z` con `isOverdue: false`; la respuesta del PUT sí dice `isOverdue: true` porque ahí la fecha aún es el texto del validador.
