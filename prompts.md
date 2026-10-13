@@ -88,3 +88,14 @@ Pasaron los 4 funcionales que esperan `isOverdue` en false y los 4 unitarios que
 ```
 
 **Qué salió:** se contrastó contra las suites completas y los recuentos cuadran (44/3 de 47 y 4/2 de 6). La duda del punto 3 se cerró con una prueba desechable que imprimió el valor real: tras `findOrFail`, `dueDate` es un `Date`; el GET lo devuelve como `2026-08-12T00:00:00.000Z` con `isOverdue: false`; la respuesta del PUT sí dice `isOverdue: true` porque ahí la fecha aún es el texto del validador.
+
+## Prompt 4
+
+**Modelo:** Fable 5.1 (claude-fable-5-1)
+**Herramienta:** Claude Code
+
+```
+escribir el hallazgo
+```
+
+**Qué salió:** reescribió `HALLAZGOS.md`, que aún traía la plantilla del ejercicio de migraciones, con los tres puntos del README de este módulo y una línea por punto, a partir del texto del Prompt 3 y con la duda ya cerrada.
