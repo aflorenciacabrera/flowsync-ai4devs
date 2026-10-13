@@ -40,7 +40,28 @@ Estos dos no se leen en el mismo sitio:
 
 No toques nada fuera de backend/tests/. Ni el modelo, ni el controlador, ni el transformer, ni la spec. Si un test falla, déjalo en rojo: no arregles isOverdueOn. No borres los tests que ya hay en ese archivo. No juntes dos Scenarios en un mismo test.
 
-guardar en promts el resultado
 ```
 
 **Qué salió:** escribió los siete tests a la primera; 4 en verde y 3 en rojo (los que esperan `isOverdue: true`), porque `due_date` llega del driver como `Date` y el `<` de `isOverdueOn` compara `Date` con texto. Se dejaron en rojo, como pedía el prompt.
+
+## Prompt 2
+
+**Modelo:** Fable 5.1 (claude-fable-5-1)
+**Herramienta:** Claude Code
+
+```
+Crea backend/tests/unit/ y escribe ahí los bordes de isOverdueOn, el método de backend/app/models/task.ts. Sin servidor, sin base de datos y sin HTTP: new Task(), asigna dueDate y status en memoria y llama al método. No uses save, ni el reloj, ni la fecha de hoy. Fechas fijas, por ejemplo 2026-08-12 y 2026-08-13.
+
+Un test por borde:
+- fecha anterior al día de referencia, y la tarea sin hacer: vencida
+- fecha exactamente igual al día de referencia: no vencida
+- fecha posterior: no vencida
+- sin fecha, dueDate null: no vencida
+- tarea en estado done con la fecha pasada: no vencida
+
+Y un caso más, que no sale de la spec: la misma fecha pasada y el mismo día de referencia, una vez con dueDate en texto AAAA-MM-DD y otra con un Date. Las dos llamadas devuelven lo mismo, y las dos dicen que está vencida. El tipo declara string | null; el Date es el valor que de verdad llega al leer la columna, así que asígnalo en el test sin cambiar el modelo.
+
+No toques nada fuera de backend/tests/unit/. Si un test falla, déjalo en rojo: no arregles isOverdueOn.
+```
+
+**Qué salió:** seis tests en `backend/tests/unit/task_overdue.spec.ts` a la primera; 4 en verde y 2 en rojo: «tarea hecha con la fecha pasada» (el método no mira el estado) y «texto vs Date» (el `<` con un `Date` da `false`). Se dejaron en rojo, como pedía el prompt.
